@@ -1,0 +1,39 @@
+{
+  "name": "SleepFlow",
+  "subtitle": "Audio que se duerme con vos",
+  "description": "App de sueño que adapta el volumen a tu frecuencia cardíaca via Apple Watch.",
+  "iconURL": "https://arenazl.github.io/sleepflow/icon.png",
+  "apps": [
+    {
+      "name": "SleepFlow",
+      "bundleIdentifier": "com.sleepflow.app",
+      "developerName": "Lucas Arenaz",
+      "subtitle": "Audio que se duerme con vos",
+      "localizedDescription": "SleepFlow reproduce tu música o podcast mientras te dormís y baja el volumen automáticamente cuando detecta sleep onset, usando la frecuencia cardíaca del Apple Watch. Inspirada en Muse S Headband — sin EEG, usando HRV/HR como proxy fisiológico. Todo on-device, sin backend, sin cuenta.",
+      "iconURL": "https://arenazl.github.io/sleepflow/icon.png",
+      "tintColor": "#6366F1",
+      "category": "lifestyle",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "buildVersion": "1",
+          "date": "2026-04-29",
+          "localizedDescription": "MVP inicial: HealthKit observer de HR del Apple Watch, fade gradual de volumen, selección de playlist desde Apple Music, URL scheme para trigger desde Watch (sleepflow://start), persistencia de sesiones con SwiftData, gráfico de HR en summary.",
+          "downloadURL": "https://raw.githubusercontent.com/arenazl/sleepflow-dist/main/SleepFlow.ipa",
+          "size": 0,
+          "minOSVersion": "17.0"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": ["com.apple.developer.healthkit"],
+        "privacy": {
+          "NSHealthShareUsageDescription": "SleepFlow lee tu frecuencia cardíaca del Apple Watch para adaptar el audio.",
+          "NSHealthUpdateUsageDescription": "SleepFlow guarda datos de sesión en Salud.",
+          "NSAppleMusicUsageDescription": "SleepFlow accede a tu librería de Apple Music para elegir la música de la sesión.",
+          "NSMicrophoneUsageDescription": "No se usa micrófono."
+        }
+      }
+    }
+  ],
+  "news": []
+}

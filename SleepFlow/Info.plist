@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>SleepFlow lee tu frecuencia cardíaca del Apple Watch para detectar cuándo te dormís y bajar el volumen del audio.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>SleepFlow guarda los datos de tus sesiones de sueño en la app Salud.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>SleepFlow accede a tu librería de Apple Music para que puedas elegir la música que sonará mientras te dormís.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.sleepflow.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>sleepflow</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

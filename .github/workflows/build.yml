@@ -1,0 +1,123 @@
+name: Build SleepFlow iOS
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate App Icon
+        run: |
+          python3 -c "
+          from PIL import Image, ImageDraw
+          import math
+
+          size = 1024
+          img = Image.new('RGBA', (size, size), (0, 0, 0, 255))
+          draw = ImageDraw.Draw(img)
+
+          # Indigo to night-blue radial gradient
+          cx, cy = size // 2, size // 2
+          for r in range(450, 0, -1):
+              ratio = r / 450.0
+              red = int(15 + (99 - 15) * (1 - ratio))
+              green = int(23 + (102 - 23) * (1 - ratio))
+              blue = int(42 + (241 - 42) * (1 - ratio))
+              draw.ellipse([cx-r, cy-r, cx+r, cy+r], fill=(red, green, blue, 255))
+
+          # Crescent moon (white circle with indigo bite)
+          moon_r = 230
+          draw.ellipse([cx-moon_r, cy-moon_r, cx+moon_r, cy+moon_r], fill=(248, 250, 252, 255))
+          bite_offset = 90
+          draw.ellipse([cx-moon_r+bite_offset, cy-moon_r, cx+moon_r+bite_offset, cy+moon_r], fill=(15, 23, 42, 255))
+
+          # Heartbeat line across the lower third
+          mid_y = cy + 280
+          amp = 70
+          step = 18
+          points = []
+          for i in range(-22, 23):
+              x = cx + i * step
+              if i == -3:
+                  y = mid_y - amp * 0.3
+              elif i == -2:
+                  y = mid_y - amp * 1.4
+              elif i == -1:
+                  y = mid_y + amp * 1.2
+              elif i == 0:
+                  y = mid_y - amp * 1.6
+              elif i == 1:
+                  y = mid_y + amp * 0.4
+              else:
+                  y = mid_y
+              points.append((x, y))
+          for i in range(len(points) - 1):
+              draw.line([points[i], points[i+1]], fill=(165, 180, 252, 255), width=10)
+
+          # Stars
+          for sx, sy, sr in [(280, 240, 6), (820, 320, 4), (760, 180, 7), (180, 540, 5), (880, 640, 4)]:
+              draw.ellipse([sx-sr, sy-sr, sx+sr, sy+sr], fill=(248, 250, 252, 220))
+
+          import os
+          icon_dir = 'SleepFlow/Assets.xcassets/AppIcon.appiconset'
+          os.makedirs(icon_dir, exist_ok=True)
+          img.save(f'{icon_dir}/icon.png')
+          img.resize((128, 128), Image.LANCZOS).save('icon_small.png')
+          " 2>/dev/null || echo 'Pillow not available, skipping icon generation'
+
+      - name: Select latest Xcode
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
+          echo "Using: $XCODE_PATH"
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          xcodebuild -version
+
+      - name: Build and create IPA
+        run: |
+          xcodebuild archive \
+            -project SleepFlow.xcodeproj \
+            -scheme SleepFlow \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/SleepFlow.xcarchive \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=YES \
+            CODE_SIGNING_ALLOWED=YES \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES
+
+          APP_PATH="build/SleepFlow.xcarchive/Products/Applications/SleepFlow.app"
+          mkdir -p build/Payload
+          cp -r "$APP_PATH" build/Payload/
+          cd build
+          zip -r SleepFlow.ipa Payload/
+
+      - name: Deploy IPA to sleepflow-dist
+        run: |
+          git clone https://x-access-token:${{ secrets.DIST_PAT }}@github.com/arenazl/sleepflow-dist.git dist-repo
+          cp build/SleepFlow.ipa dist-repo/SleepFlow.ipa
+          cd dist-repo
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add SleepFlow.ipa
+          git commit -m "Update SleepFlow.ipa - $(date +%Y-%m-%d-%H%M)" || echo "No changes"
+          git push
+
+      - name: Create GitHub Release
+        run: |
+          gh release delete latest --yes 2>/dev/null || true
+          git push origin :refs/tags/latest 2>/dev/null || true
+
+          gh release create latest \
+            build/SleepFlow.ipa \
+            --title "SleepFlow Latest" \
+            --notes "Build automático $(date +%Y-%m-%d)" \
+            --prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
