@@ -15,6 +15,10 @@ final class AudioEngineService: NSObject, ObservableObject {
     private var fadeTimer: Timer?
     private var loadedItems: [MPMediaItem] = []
     private var endObserver: NSObjectProtocol?
+    private var fadeFromVolume: Float = 0
+    private var fadeTargetVolume: Float = 0
+    private var fadeStep: Int = 0
+    private var fadeTotalSteps: Int = 0
 
     override init() {
         super.init()
@@ -93,29 +97,37 @@ final class AudioEngineService: NSObject, ObservableObject {
             return
         }
 
-        let from = player.volume
-        let stepsPerSecond: Double = 30
-        let steps = max(1, Int(fadeDuration * stepsPerSecond))
-        let stepInterval = fadeDuration / Double(steps)
-        var stepCount = 0
+        fadeFromVolume = player.volume
+        fadeTargetVolume = clamped
+        fadeStep = 0
+        fadeTotalSteps = max(1, Int(fadeDuration * 30))
+        let stepInterval = fadeDuration / Double(fadeTotalSteps)
 
-        fadeTimer = Timer.scheduledTimer(withTimeInterval: stepInterval, repeats: true) { [weak self] t in
-            guard let self else { t.invalidate(); return }
-            guard let player = self.player else { t.invalidate(); return }
-            stepCount += 1
-            let progress = Float(stepCount) / Float(steps)
-            let v = from + (clamped - from) * progress
-            player.volume = v
-            self.currentVolume = v
-            if stepCount >= steps {
-                player.volume = clamped
-                self.currentVolume = clamped
-                t.invalidate()
-                self.fadeTimer = nil
+        let timer = Timer.scheduledTimer(withTimeInterval: stepInterval, repeats: true) { [weak self] t in
+            Task { @MainActor in
+                self?.fadeTick(timer: t)
             }
         }
-        if let fadeTimer = fadeTimer {
-            RunLoop.main.add(fadeTimer, forMode: .common)
+        RunLoop.main.add(timer, forMode: .common)
+        fadeTimer = timer
+    }
+
+    private func fadeTick(timer: Timer) {
+        guard let player = player else {
+            timer.invalidate()
+            fadeTimer = nil
+            return
+        }
+        fadeStep += 1
+        let progress = Float(fadeStep) / Float(fadeTotalSteps)
+        let v = fadeFromVolume + (fadeTargetVolume - fadeFromVolume) * progress
+        player.volume = v
+        currentVolume = v
+        if fadeStep >= fadeTotalSteps {
+            player.volume = fadeTargetVolume
+            currentVolume = fadeTargetVolume
+            timer.invalidate()
+            fadeTimer = nil
         }
     }
 

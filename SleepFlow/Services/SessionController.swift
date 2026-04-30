@@ -27,11 +27,11 @@ final class SessionController: ObservableObject {
     private var samplesObserver: AnyCancellable?
     private var silenceSince: Date?
 
-    init(heart: HeartRateService = HeartRateService(),
-         audio: AudioEngineService = AudioEngineService(),
+    init(heart: HeartRateService? = nil,
+         audio: AudioEngineService? = nil,
          settings: AppSettings = .shared) {
-        self.heart = heart
-        self.audio = audio
+        self.heart = heart ?? HeartRateService()
+        self.audio = audio ?? AudioEngineService()
         self.settings = settings
         observeSamples()
     }

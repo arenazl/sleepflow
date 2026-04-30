@@ -127,14 +127,15 @@ struct SessionActiveView: View {
 
     private func startTicker() {
         ticker?.invalidate()
-        ticker = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            if let start = controller.startDate {
-                elapsed = Date().timeIntervalSince(start)
+        let timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            Task { @MainActor in
+                if let start = controller.startDate {
+                    elapsed = Date().timeIntervalSince(start)
+                }
             }
         }
-        if let ticker = ticker {
-            RunLoop.main.add(ticker, forMode: .common)
-        }
+        RunLoop.main.add(timer, forMode: .common)
+        ticker = timer
     }
 
     private func formatElapsed(_ t: TimeInterval) -> String {
