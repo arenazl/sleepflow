@@ -20,7 +20,7 @@
           "date": "2026-04-29",
           "localizedDescription": "MVP inicial: HealthKit observer de HR del Apple Watch, fade gradual de volumen, selección de playlist desde Apple Music, URL scheme para trigger desde Watch (sleepflow://start), persistencia de sesiones con SwiftData, gráfico de HR en summary.",
           "downloadURL": "https://raw.githubusercontent.com/arenazl/sleepflow-dist/main/SleepFlow.ipa",
-          "size": 0,
+          "size": 167407,
           "minOSVersion": "17.0"
         }
       ],
